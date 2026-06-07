@@ -4,8 +4,8 @@ export const msalConfig = {
   auth: {
     clientId: "afa54493-e93e-4d98-ac3c-651e26eeac87",
     authority: "https://login.microsoftonline.com/a988ccd4-00ed-4bf3-a4d1-b5661f44abdf",
-    redirectUri: "http://10.0.2.2:5173",
-    postLogoutRedirectUri: "http://10.0.2.2:5173/login",
+    redirectUri: "https://despiegue-mantenimiento-equipos2.vercel.app",
+    postLogoutRedirectUri: "https://despiegue-mantenimiento-equipos2.vercel.app/login",
     navigateToLoginRequestUrl: false,
   },
   cache: {

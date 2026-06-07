@@ -1,27 +1,14 @@
 import axios from 'axios'
 
-// En Docker, Nginx hace de proxy hacia cada microservicio.
-// Las rutas /api/* son interceptadas por Nginx y redirigidas al servicio correcto.
+const AUTH_URL = 'https://despiegue-mantenimientoequipos2-production.up.railway.app/api'
+const EQUIPMENT_URL = 'https://bountiful-wonder-production-e22e.up.railway.app/api'
+const MAINTENANCE_URL = 'https://caring-rebirth-production-a1dc.up.railway.app/api'
 
-export const authApi = axios.create({
-  baseURL: '/api',   // → auth-service: /api/auth/*
-})
-
-export const userApi = axios.create({
-  baseURL: '/api',   // → auth-service: /api/users/*
-})
-
-export const equipmentApi = axios.create({
-  baseURL: '/api',   // → equipment-service: /api/equipments/*, /api/equipment-types/*, /api/import/*
-})
-
-export const locationApi = axios.create({
-  baseURL: '/api',   // → location-service: /api/laboratorios/*, /api/equipment-locations/*
-})
-
-export const maintenanceApi = axios.create({
-  baseURL: '/api',   // → maintenance-service: /api/tickets/*, /api/catalog/*, etc.
-})
+export const authApi = axios.create({ baseURL: AUTH_URL })
+export const userApi = axios.create({ baseURL: AUTH_URL })
+export const equipmentApi = axios.create({ baseURL: EQUIPMENT_URL })
+export const locationApi = axios.create({ baseURL: EQUIPMENT_URL })
+export const maintenanceApi = axios.create({ baseURL: MAINTENANCE_URL })
 
 const addAuthInterceptor = (instance) => {
   instance.interceptors.request.use(config => {
@@ -31,13 +18,6 @@ const addAuthInterceptor = (instance) => {
     } else {
       console.warn('[API WARN] No token found in localStorage for request:', config.url)
     }
-
-    console.log('[REQ]', config.baseURL + config.url, {
-      hasToken: !!token,
-      tokenPreview: token ? token.substring(0, 20) + '...' : 'NO TOKEN',
-      authHeader: config.headers.Authorization ? 'YES' : 'NO',
-    })
-
     return config
   })
 
@@ -47,11 +27,7 @@ const addAuthInterceptor = (instance) => {
       const status = err.response?.status
       const url = err.config?.baseURL + err.config?.url
 
-      console.error('[API ERROR]', {
-        status,
-        url,
-        data: err.response?.data,
-      })
+      console.error('[API ERROR]', { status, url, data: err.response?.data })
 
       if (status === 403) {
         const IGNORAR_403 = ['/users', '/catalogos', '/tipos']
