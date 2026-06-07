@@ -1,0 +1,112 @@
+services:
+
+  # ─── SQL Server ────────────────────────────────────────────────────────────
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: mantenimiento_sqlserver
+    environment:
+      SA_PASSWORD: "FiseiAdmin2026!"
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: "Express"
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'FiseiAdmin2026!' -Q 'SELECT 1' -C || exit 1"]
+      interval: 10s
+      retries: 10
+      start_period: 30s
+
+  # ─── Auth Service (puerto 5000) ────────────────────────────────────────────
+  auth-service:
+    build:
+      context: ./src/services/AuthService
+      dockerfile: Dockerfile
+    container_name: mantenimiento_auth
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:80
+      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=FISEI_AuthDB;User Id=sa;Password=FiseiAdmin2026!;TrustServerCertificate=True;"
+      JwtSettings__SecretKey: "una-clave-secreta-larga-minimo-32-caracteres-fisei2026"
+      JwtSettings__Issuer: "fisei-inventory"
+      JwtSettings__Audience: "fisei-inventory-client"
+      JwtSettings__ExpirationMinutes: "480"
+    ports:
+      - "5000:80"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+
+  # ─── Equipment Service (puerto 5002) ───────────────────────────────────────
+  equipment-service:
+    build:
+      context: ./src/services/EquipmentService
+      dockerfile: Dockerfile
+    container_name: mantenimiento_equipment
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:80
+      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=FISEI_EquipmentDB;User Id=sa;Password=FiseiAdmin2026!;TrustServerCertificate=True;"
+      Services__AuthServiceUrl: "http://auth-service:80/"
+    ports:
+      - "5002:80"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+
+  # ─── Location Service (puerto 5003) ────────────────────────────────────────
+  location-service:
+    build:
+      context: ./src/services/LocationService
+      dockerfile: Dockerfile
+    container_name: mantenimiento_location
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:80
+      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=FISEI_LocationDB;User Id=sa;Password=FiseiAdmin2026!;TrustServerCertificate=True;"
+      Services__EquipmentService: "http://equipment-service:80/"
+    ports:
+      - "5003:80"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      equipment-service:
+        condition: service_started
+
+  # ─── Maintenance Service (puerto 5004) ─────────────────────────────────────
+  maintenance-service:
+    build:
+      context: ./src/services/MaintenanceService
+      dockerfile: Dockerfile
+    container_name: mantenimiento_maintenance
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:80
+      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=FISEI_MaintenanceDB;User Id=sa;Password=FiseiAdmin2026!;TrustServerCertificate=True;"
+    ports:
+      - "5004:80"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+
+  # ─── Frontend React/Vite (puerto 5173) ─────────────────────────────────────
+  frontend:
+    build:
+      context: ./src/frontend
+      dockerfile: Dockerfile
+    container_name: mantenimiento_frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - auth-service
+      - equipment-service
+      - location-service
+      - maintenance-service
+
+volumes:
+  sqlserver_data:

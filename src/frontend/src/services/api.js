@@ -1,25 +1,26 @@
 import axios from 'axios'
 
-const BASE_IP = 'http://10.0.2.2'  // Para emulador Android Studio
+// En Docker, Nginx hace de proxy hacia cada microservicio.
+// Las rutas /api/* son interceptadas por Nginx y redirigidas al servicio correcto.
 
 export const authApi = axios.create({
-  baseURL: `${BASE_IP}:5000/api`,
+  baseURL: '/api',   // → auth-service: /api/auth/*
 })
 
 export const userApi = axios.create({
-  baseURL: `${BASE_IP}:5000/api`,
+  baseURL: '/api',   // → auth-service: /api/users/*
 })
 
 export const equipmentApi = axios.create({
-  baseURL: `${BASE_IP}:5002/api`,
+  baseURL: '/api',   // → equipment-service: /api/equipments/*, /api/equipment-types/*, /api/import/*
 })
 
 export const locationApi = axios.create({
-  baseURL: `${BASE_IP}:5003/api`,
+  baseURL: '/api',   // → location-service: /api/laboratorios/*, /api/equipment-locations/*
 })
 
 export const maintenanceApi = axios.create({
-  baseURL: `${BASE_IP}:5004/api`,
+  baseURL: '/api',   // → maintenance-service: /api/tickets/*, /api/catalog/*, etc.
 })
 
 const addAuthInterceptor = (instance) => {
