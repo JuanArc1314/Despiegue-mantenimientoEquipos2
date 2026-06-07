@@ -1,9 +1,5 @@
 {
   "appId": "com.tuuniversidad.mantenimiento",
   "appName": "FISEI Mantenimiento",
-  "webDir": "dist",
-  "server": {
-    "url": "https://despiegue-mantenimiento-equipos2.vercel.app",
-    "cleartext": false
-  }
+  "webDir": "dist"
 }
