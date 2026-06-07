@@ -36,9 +36,19 @@ WORKDIR /app
 
 COPY --from=build-equipment /app/equipment ./equipment
 COPY --from=build-location  /app/location  ./location
-COPY combined/start.sh ./start.sh
-RUN chmod +x ./start.sh
+
+# Script de arranque embebido directamente (sin depender de archivos externos)
+RUN printf '#!/bin/bash\n\
+echo "==> Starting EquipmentService on :80"\n\
+ASPNETCORE_URLS="http://+:80" dotnet /app/equipment/EquipmentService.API.dll &\n\
+echo "==> Starting LocationService on :81"\n\
+ASPNETCORE_URLS="http://+:81" \\\n\
+  ConnectionStrings__DefaultConnection="$LOC_ConnectionStrings__DefaultConnection" \\\n\
+  Services__EquipmentService="$LOC_Services__EquipmentService" \\\n\
+  dotnet /app/location/LocationService.API.dll &\n\
+wait -n\n\
+exit $?\n' > /app/start.sh && chmod +x /app/start.sh
 
 EXPOSE 80 81
 
-ENTRYPOINT ["./start.sh"]
+ENTRYPOINT ["/app/start.sh"]
