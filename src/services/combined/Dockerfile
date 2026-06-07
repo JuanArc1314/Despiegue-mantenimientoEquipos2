@@ -8,7 +8,10 @@ COPY EquipmentService/EquipmentService.Domain/EquipmentService.Domain.csproj Equ
 COPY EquipmentService/EquipmentService.Infrastructure/EquipmentService.Infrastructure.csproj EquipmentService.Infrastructure/
 RUN dotnet restore EquipmentService.API/EquipmentService.API.csproj
 
-COPY EquipmentService/ .
+COPY EquipmentService/EquipmentService.API/ EquipmentService.API/
+COPY EquipmentService/EquipmentService.Application/ EquipmentService.Application/
+COPY EquipmentService/EquipmentService.Domain/ EquipmentService.Domain/
+COPY EquipmentService/EquipmentService.Infrastructure/ EquipmentService.Infrastructure/
 RUN dotnet publish EquipmentService.API/EquipmentService.API.csproj -c Release -o /app/equipment
 
 # ─── BUILD LocationService ────────────────────────────────────────────────────
@@ -21,7 +24,10 @@ COPY LocationService/LocationService.Domain/LocationService.Domain.csproj Locati
 COPY LocationService/LocationService.Infrastructure/LocationService.Infrastructure.csproj LocationService.Infrastructure/
 RUN dotnet restore LocationService.API/LocationService.API.csproj
 
-COPY LocationService/ .
+COPY LocationService/LocationService.API/ LocationService.API/
+COPY LocationService/LocationService.Application/ LocationService.Application/
+COPY LocationService/LocationService.Domain/ LocationService.Domain/
+COPY LocationService/LocationService.Infrastructure/ LocationService.Infrastructure/
 RUN dotnet publish LocationService.API/LocationService.API.csproj -c Release -o /app/location
 
 # ─── RUNTIME ──────────────────────────────────────────────────────────────────
@@ -30,10 +36,9 @@ WORKDIR /app
 
 COPY --from=build-equipment /app/equipment ./equipment
 COPY --from=build-location  /app/location  ./location
-COPY start.sh ./start.sh
+COPY combined/start.sh ./start.sh
 RUN chmod +x ./start.sh
 
-# EquipmentService en puerto 80, LocationService en puerto 81
 EXPOSE 80 81
 
 ENTRYPOINT ["./start.sh"]
